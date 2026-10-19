@@ -11,7 +11,7 @@ use cognirail_rust_lint_config::baseline::{TOOLCHAIN, lint_args};
 use cognirail_rust_lint_config::guard::{self, Violation};
 use cognirail_rust_lint_config::sync_baseline;
 
-const USAGE: &str = "usage: cognirail-rust-lint-config check|fix|version";
+const USAGE: &str = "usage: cognirail-rust-lint-config check|fix|editor|version";
 
 fn main() -> ExitCode {
     let command = env::args().nth(1);
@@ -21,6 +21,7 @@ fn main() -> ExitCode {
             ExitCode::SUCCESS
         }
         Some("check") => lint(false),
+        Some("editor") => editor(),
         Some("fix") => {
             if lint(true) == ExitCode::SUCCESS {
                 lint(false)
@@ -58,8 +59,24 @@ fn run(fix: bool) -> io::Result<bool> {
     let managed = sync_baseline(&root)?;
     let rustfmt_config = managed.join("rustfmt.toml");
     let fmt_ok = cargo_fmt(&rustfmt_config, fix)?;
-    let clippy_ok = cargo_clippy(&managed, fix)?;
+    let clippy_ok = cargo_clippy(&managed, fix, &[])?;
     Ok(fmt_ok && clippy_ok)
+}
+
+/// 给 rust-analyzer 的 `check.overrideCommand`：只跑 clippy 并输出 JSON 诊断。
+/// 守卫与 fmt 不进编辑器（它们不是逐行诊断），仍由 `check` 把关。
+fn editor() -> ExitCode {
+    let result = env::current_dir()
+        .and_then(|root| sync_baseline(&root))
+        .and_then(|managed| cargo_clippy(&managed, false, &["--message-format=json"]));
+    match result {
+        Ok(true) => ExitCode::SUCCESS,
+        Ok(false) => ExitCode::FAILURE,
+        Err(err) => {
+            say(&format!("cognirail-rust-lint-config: {err}"));
+            ExitCode::FAILURE
+        }
+    }
 }
 
 fn cargo_fmt(config: &Path, fix: bool) -> io::Result<bool> {
@@ -72,13 +89,14 @@ fn cargo_fmt(config: &Path, fix: bool) -> io::Result<bool> {
     Ok(command.status()?.success())
 }
 
-fn cargo_clippy(managed: &Path, fix: bool) -> io::Result<bool> {
+fn cargo_clippy(managed: &Path, fix: bool, extra: &[&str]) -> io::Result<bool> {
     let mut command = cargo();
     command.env("CLIPPY_CONF_DIR", managed).arg("clippy");
     if fix {
         command.args(["--fix", "--allow-dirty", "--allow-staged"]);
     }
     command
+        .args(extra)
         .args(["--all-targets", "--all-features", "--"])
         .args(lint_args());
     Ok(command.status()?.success())

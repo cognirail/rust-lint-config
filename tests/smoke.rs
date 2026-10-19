@@ -53,6 +53,22 @@ fn unwrap_fails() -> io::Result<()> {
 
 #[test]
 #[ignore = "runs cargo against a temp project"]
+fn editor_emits_json_with_baseline_levels() -> io::Result<()> {
+    let lib = format!(
+        "{CLEAN_LIB}\n/// 解析。\n#[must_use]\npub fn parse(text: &str) -> i32 {{\n    text.parse().unwrap()\n}}\n"
+    );
+    let output = Command::new(env!("CARGO_BIN_EXE_cognirail-rust-lint-config"))
+        .arg("editor")
+        .current_dir(consumer("editor", MANIFEST, &lib)?)
+        .output()?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("\"reason\":\"compiler-message\""));
+    assert!(stdout.contains("clippy::unwrap_used"));
+    Ok(())
+}
+
+#[test]
+#[ignore = "runs cargo against a temp project"]
 fn allow_attribute_fails() -> io::Result<()> {
     let lib = format!("{CLEAN_LIB}\n#[allow(dead_code)]\nfn unused() {{}}\n");
     assert!(!check(&consumer("allow", MANIFEST, &lib)?)?);

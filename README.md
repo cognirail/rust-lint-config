@@ -32,11 +32,25 @@ rustup toolchain install 1.99.1 --profile minimal -c clippy -c rustfmt
 ## Quick start
 
 ```bash
-cargo install --git https://github.com/cognirail/rust-lint-config --tag v0.1.0
+cargo install --git https://github.com/cognirail/rust-lint-config --tag v0.2.0
 cognirail-rust-lint-config check     # report only
 cognirail-rust-lint-config fix       # cargo fmt + clippy --fix, then re-check
 cognirail-rust-lint-config version   # print the pinned toolchain
 ```
+
+## Editor integration (VS Code / Cursor)
+
+rust-analyzer runs plain `cargo check` by default, so it never sees the baseline levels (they are passed on the command
+line, not stored in the project). Point its check command at `editor`, which runs the same clippy invocation with
+`--message-format=json`, and commit `.vscode/settings.json`:
+
+```json
+{
+  "rust-analyzer.check.overrideCommand": ["cognirail-rust-lint-config", "editor"]
+}
+```
+
+`editor` only reports clippy diagnostics; the config / escape-hatch guards and `cargo fmt --check` still run in `check`.
 
 ## Exceptions
 
@@ -75,7 +89,7 @@ fn print_report(report: &Report) { /* ... */ }
 
 ```bash
 cargo test                       # unit tests
-cargo test -- --ignored          # smoke: runs the CLI against temp consumer projects (clean passes, three failure modes fail)
+cargo test -- --ignored          # smoke: runs the CLI against temp consumer projects (clean passes, three failure modes fail, editor emits JSON)
 cargo run -- check               # the package lints itself with its own baseline
 ```
 
