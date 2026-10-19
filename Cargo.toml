@@ -1,0 +1,10 @@
+[package]
+name = "cognirail-rust-lint-config"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+description = "Opinionated clippy + rustfmt baseline for Rust projects: all on, zero override, no inline escape hatches"
+license = "ISC"
+repository = "https://github.com/cognirail/rust-lint-config"
+
+[dependencies]

@@ -1,0 +1,11 @@
+# cognirail Rust 基线的 clippy 阈值；由 cognirail-rust-lint-config 同步到 .cognirail/clippy.toml，经 CLIPPY_CONF_DIR 生效。
+# 对齐 python 基线：max-nested-blocks = 4、max-args = 6。
+excessive-nesting-threshold = 4
+too-many-arguments-threshold = 6
+too-many-lines-threshold = 80
+# 测试就是测试：允许 unwrap / expect / panic / 打印，但其余规则照常（对齐 python 基线的测试豁免）。
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-print-in-tests = true
+allow-indexing-slicing-in-tests = true

@@ -1,0 +1,4 @@
+# cognirail Rust 基线的格式化配置；只用 stable 选项。
+newline_style = "Unix"
+use_field_init_shorthand = true
+use_try_shorthand = true
