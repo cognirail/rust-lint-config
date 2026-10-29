@@ -32,7 +32,7 @@ rustup toolchain install 1.99.1 --profile minimal -c clippy -c rustfmt
 ## Quick start
 
 ```bash
-cargo install --git https://github.com/cognirail/rust-lint-config --tag v0.2.0
+cargo install --git https://github.com/cognirail/rust-lint-config --tag v0.3.0
 cognirail-rust-lint-config check     # report only
 cognirail-rust-lint-config fix       # cargo fmt + clippy --fix, then re-check
 cognirail-rust-lint-config version   # print the pinned toolchain
@@ -75,6 +75,11 @@ fn print_report(report: &Report) { /* ... */ }
   `dbg_macro` and `print_stdout` / `print_stderr` are denied; `unsafe_code` is denied.
 - **Complexity ≈ the sister packages.** clippy itself advises against `cognitive_complexity`, so the limits are
   `excessive_nesting` 4, `too_many_arguments` 6 and `too_many_lines` 80 (matching the Python baseline).
+- **Style rules must make code easier to read.** Rules that prevent bugs stay on even when the fixed code is slightly
+  harder to read (`match_same_arms` stays: identical arms are usually a copy-paste error). For a purely stylistic lint,
+  the deciding question is whether the rewrite makes the code easier or harder for a human or an AI to understand: does
+  it add a negation, add nesting, make intent more implicit, or make a name less precise? If yes, it is allowed by name
+  (same standard as eslint-config).
 - **Tests are tests.** `#[test]` / `#[cfg(test)]` code may `unwrap`, `expect`, `panic`, print and index — but is otherwise
   fully linted. Helpers outside `#[test]` functions (for example in `tests/`) are not exempt: return `io::Result` instead.
 
@@ -84,6 +89,7 @@ fn print_report(report: &Report) { /* ... */ }
 | ---- | --- | ----------- |
 | `clippy::missing_errors_doc`, `clippy::missing_panics_doc` | Presence of docs is not a quality signal; written docs are still checked | never |
 | `clippy::must_use_candidate` | `#[must_use]` on every pure function is noise; `unused_must_use` covers types that matter | never |
+| `clippy::map_unwrap_or` | Style only: rewrites `.map(f).unwrap_or(d)` as `map_or(d, f)`, putting the default before the mapping | never |
 
 ## Development
 

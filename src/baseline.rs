@@ -40,6 +40,10 @@ const ALLOW_LINTS: &[(&str, &str)] = &[
         "clippy::must_use_candidate",
         "给每个纯函数加 #[must_use] 是噪音；真正要用返回值的类型由 unused_must_use 管。删除条件：不删。",
     ),
+    (
+        "clippy::map_unwrap_or",
+        "纯风格：把 .map(f).unwrap_or(d) 改成 map_or(d, f)，默认值提到映射前面，阅读顺序反了。删除条件：不删。",
+    ),
 ];
 
 /// 拼出传给 rustc / clippy 的 lint 参数：先整组拒绝，再单条拒绝，最后具名放行（后出现的覆盖先出现的）。
